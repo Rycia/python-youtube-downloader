@@ -41,7 +41,6 @@ TEXT_DARK_GRAY = "\033[1;30m"
 TEXT_BOLD = "\033[1m"
 TEXT_ITALIC = "\x1B[3m"
 TEXT_UNDERLINE = "\033[4m"
-TEXT_UNDERLINE = "\033[4m"
 
 TEXT_RESET = "\033[0m"  # ", TEXT_RESET, "
 
@@ -114,8 +113,9 @@ if __name__ == "__main__":
         TEXT_BREAK()
 
     TEXT_BREAK()
-    print("                        Made by Rycia\n                ", TEXT_ITALIC, TEXT_UNDERLINE,
-          "https://github.com/Rycia", TEXT_RESET)
+    print("                         Made by Rycia\n                  ", TEXT_ITALIC, TEXT_DARK_GRAY,
+          "  github.com/Rycia\n          github.com/Rycia/python-youtube-downloader", TEXT_RESET)
+
     TEXT_BREAK()
     url = input("Enter the URL of the YouTube playlist you wish to download: ")
     TEXT_BREAK()

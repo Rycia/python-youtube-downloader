@@ -2,6 +2,8 @@ import os
 from operator import truediv
 from tkinter.tix import Tree
 from pytube import Playlist, YouTube
+# https://www.youtube.com/watch?v=XGckAVECXKw
+# https://www.youtube.com/playlist?list=PLP1MQHioOXtF0XXz3HRhkIqo8u-f7nNOh
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 # CONFIG
@@ -11,7 +13,7 @@ from pytube import Playlist, YouTube
 remove_source_file = True
 
 # If enabled, will show more info about what's going on and error information for debugging. Not reccomended to enable this!
-debug_mode = True
+debug_mode = False
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
@@ -76,10 +78,21 @@ class response:  # Various "responses" that can be used for prompts, all put her
 
 
 def playlist_downloader_execute(playlist_url):
-    # Create a folder where all the songs will be put
-    if not (os.path.isdir("./"+playlist_url.title)):
-        os.mkdir(playlist_url.title)
-    os.chdir(playlist_url.title)  # Change working directory
+    # remove special characters in playlist name/playlist title
+    playlist_title_filtered = (playlist_url.title)
+    playlist_title_filtered.replace(';', '-')
+    playlist_title_filtered.replace(':', '-')
+
+    # if title is invalid, makes a alt directory
+    try:
+        if not (os.path.isdir("./"+playlist_title_filtered)):
+            os.mkdir(playlist_title_filtered)
+        os.chdir(playlist_title_filtered)  # Change working directory
+    except:
+        if not (os.path.isdir("./"+'Backup')):
+            os.mkdir('Backup')
+        os.chdir('Backup')  # Change working directory
+        print(format.yellow, format.italic, "Folder name would had been invalid due to special characters typically disallowed within a file's name.\nCreated a directory alternatively named Backup instead of the playlist's name.", format.reset)
 
     # get linked list of links in the playlist
     links = playlist_url.video_urls
@@ -90,15 +103,15 @@ def playlist_downloader_execute(playlist_url):
         yt = YouTube(l)  # Convert link to YouTube object
 
         # takes the best resolution stream for best possible audio result
-        music = yt.streams.get_highest_resolution()
+        stream = yt.streams.get_highest_resolution()
 
         # gets the filename of the first audio stream
-        default_filename = music.default_filename
+        default_filename = stream.default_filename
         print(format.green, format.bold, "Downloading  ",
               format.reset, default_filename)
 
         # downloads first audio stream
-        music.download()
+        stream.download()
 
         # creates mp3 filename for downloaded file
         new_filename = default_filename[0:-3] + "mp3"
@@ -125,6 +138,43 @@ def playlist_downloader_execute(playlist_url):
     print(format.green, format.bold, "Complete!", format.reset)
     format.divider()
 
+
+def video_downloader_execute(video_url):
+    # download each item in the list
+    #link = video_url.video_urls
+
+    # yt = YouTube(url)  # Convert link to YouTube object
+    yt = YouTube(video_url)
+
+    # takes the best resolution stream for best possible audio result
+    stream = yt.streams.get_highest_resolution()
+
+    # gets the filename
+    default_filename = stream.default_filename
+    print(format.green, format.bold, "Downloading  ",
+          format.reset, default_filename)
+
+    stream.download()
+
+    # creates mp3 filename for downloaded file
+    new_filename = default_filename[0:-3] + "mp3"
+
+    for filename in os.listdir((os.curdir)):  # Convert
+        if (filename.endswith(".mp4")):  # or .avi, .mpeg, ect
+            print('     . . .')
+            prompt_a = ("ffmpeg -i \""+default_filename +
+                        "\" \""+new_filename+"\""+" -y")
+            prompt_b = (" -loglevel warning")  # debug mode
+
+            if debug_mode == True:
+                os.system(prompt_a)
+            elif debug_mode == False:
+                os.system(prompt_a + prompt_b)
+
+        if remove_source_file == True:
+            # Remove original mp4, just leaving the converted file
+            os.remove(default_filename)
+
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
 
@@ -148,24 +198,28 @@ if __name__ == "__main__":
         format.divider()
     make_header()
 
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
     def prompt_url():  # Ask the user for the URL and execute other functions & code based on the input
         global url
         url = input(
             " Enter the URL of the YouTube playlist or video you wish to download: ")
         format.divider()
 
-        if 'youtube.com/playlist?list=' in url:  # If url input is a playlist url,
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
+        if (str("youtube.com/playlist")) in url:  # If url input is a playlist url,
             # if using "contains," a error is thrown: AttributeError: 'str' object has no attribute 'contains', so use "in" instead
             if debug_mode == True:
                 print(format.yellow, "[INFO] Playlist detected!")
 
             # With error checking, execute playlist_downloader_execute with playlist's url parameter
-            pl = Playlist(url)
+            yt = Playlist(url)
             if debug_mode == True:
-                playlist_downloader_execute(pl)
+                playlist_downloader_execute(yt)
             elif debug_mode == False:
                 try:
-                    playlist_downloader_execute(pl)
+                    playlist_downloader_execute(yt)
                 except Exception as thrown_error:
                     error_text.invalid_url()
                     print(thrown_error)
@@ -176,10 +230,32 @@ if __name__ == "__main__":
                     format.red, "[ERROR] debug_mode is neither True nor False and is therefore invalid. Set it to one of the two!", format.reset)
                 exit(2)
 
-        elif 'youtube.com/watch?v=' in url:  # If url input is a video url,
+        ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
+        elif (str("youtube.com/watch")) in url:  # If url input is a video url
             if debug_mode == True:
-                print(format.yellow, "[INFO] Video detected!")
+                print(format.yellow, "[INFO] Video detected!", format.reset)
+
+            # With error checking, execute video_downloader_execute with video's url parameter
+            yt = YouTube(url)
+            if debug_mode == True:
+                video_downloader_execute(yt)
+            elif debug_mode == False:
+                try:
+                    video_downloader_execute(yt)
+                except Exception as thrown_error:
+                    error_text.invalid_url()
+                    print(thrown_error)
+                    format.divider()
+                    exit(1)
+            else:
+                print(
+                    format.red, "[ERROR] debug_mode is neither True nor False and is therefore invalid. Set it to one of the two!", format.reset)
+                exit(4)
 
         else:  # Invalid link
             error_text.invalid_url()
-    prompt_url()
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
+    prompt_url()  # Start the code

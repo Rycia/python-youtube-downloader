@@ -1,9 +1,9 @@
 # python-youtube-downloader
 
 A python program built for use in Windows and Visual Studio Code to download and convert entire Youtube videos and playlists from video to audio format.
-
 This script will have you input a URL (playlist or video), download it as a .mp4 at highest quality, and convert it to a mp3, removing the original .mp4 if remove_source_file (see configuration below) is set to True.
 Playlists are packaged into a folder with the playlist. The script downloads files to the directory you run it.
+
 ---
 
 The script works essentially as is, excluding this little bit of setup that will not intrude on the preferences you have set for Visual Studio Code (assuming that's what you're using.)

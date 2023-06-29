@@ -1,10 +1,9 @@
 import os
-from operator import truediv
-from tkinter.tix import Tree
+import time
 from pytube import Playlist, YouTube
 
 
-class config():  # CONFIG
+class Config():  # CONFIG
 
     # Whether to remove the source video (.mp4) files when converted to mp3.
     # True or False
@@ -62,29 +61,27 @@ class format:  # text formatting bank, in a class to be collapsable
 
 class error_text:
     def invalid_url():
-        print(format.red, 'Make sure to enter a valid URL!\nPlaylists should start with ', format.italic, format.underline,
+        print(format.red, ' Make sure to enter a valid URL!\n  Playlists should start with ', format.italic, format.underline,
               'https://youtube.com/playlist?list=', format.reset, format.red,
-              '\n Videos should start with   ', format.italic, format.underline,
+              '\n  Videos should start with   ', format.italic, format.underline,
               'https://www.youtube.com/watch?v=', format.reset, format.red,
-              '\nYou can obtain playlist links under \"Share\" and \"Copy\" on the playlist page, not the link of any video within the playlist!'
-              '\n\n The connection may had failed if you received streamingData, and you should retry or use a different video.', format.reset)
+              '\n  You can obtain playlist links under \"Share\" and \"Copy\" on the playlist page, not the link of any video within the playlist!'
+              '\n  The connection may had failed if you received streamingData, and you should retry or use a different video.', format.reset)
 
 
 class response:  # Various "responses" that can be used for prompts, all put here for ease
     is_yes = ['yes', 'ye', 'yea', 'yeah', 'yup', 'yay', 'y']
     is_no = ['no', 'na', 'naw', 'nah', 'nay', 'nu', 'nada', 'n']
-    is_playlist = ['playlist', 'plist', 'playl',
-                   'pl', 'play', 'multi', 'multiple,', 'm']
-    is_video = ['video', 'vid', 'v', 'single', 's']
 
 
+# download a playlist from a url
 def playlist_downloader_execute(playlist_url):
     # remove special characters in playlist name/playlist title
     playlist_title_filtered = (playlist_url.title)
     playlist_title_filtered.replace(';', '-')
     playlist_title_filtered.replace(':', '-')
 
-    # if title is invalid, makes a alt directory
+    # if title is (still) invalid, makes a directory named Backup instead of the playlist's name, then go into that directory
     try:
         if not (os.path.isdir("./"+playlist_title_filtered)):  # if directory doesnt exist
             os.mkdir(playlist_title_filtered)
@@ -109,7 +106,7 @@ def playlist_downloader_execute(playlist_url):
         # gets the filename of the first audio stream
         default_filename = stream.default_filename
         print(format.green, format.bold, "Downloading  ",
-              format.reset, default_filename)
+              format.reset, (default_filename[:-4]))
 
         # downloads first audio stream
         stream.download()
@@ -117,19 +114,22 @@ def playlist_downloader_execute(playlist_url):
         # creates mp3 filename for downloaded file
         new_filename = default_filename[0:-3] + "mp3"
 
-        for filename in os.listdir((os.curdir)):  # Convert
-            if (filename.endswith(".mp4")):  # or .avi, .mpeg, ect
-                print(format.green, format.italic, 'Converting', format.reset)
-                prompt_a = ("ffmpeg -i \""+default_filename +
-                            "\" \""+new_filename+"\""+" -y")
-                prompt_b = (" -loglevel warning")  # debug mode
+        def ffmpeg_to_mp3():  # Convert the mp4 to mp3 using ffmpeg
+            for filename in os.listdir((os.curdir)):  # Convert
+                if (filename.endswith(".mp4")):
+                    print(format.green, format.italic,
+                          'Converting', format.reset)
+                    prompt_a = ("ffmpeg -i \""+default_filename +
+                                "\" \""+new_filename+"\""+" -y")
+                    prompt_b = (" -loglevel warning")  # debug mode
 
-                if config.debug_mode == True:
-                    os.system(prompt_a)
-                elif config.debug_mode == False:
-                    os.system(prompt_a + prompt_b)
+                    if Config.debug_mode == True:
+                        os.system(prompt_a)
+                    elif Config.debug_mode == False:
+                        os.system(prompt_a + prompt_b)
+        ffmpeg_to_mp3()
 
-        if config.remove_source_file == True:
+        if Config.remove_source_file == True:
             # Remove original mp4, just leaving the converted file
             os.remove(default_filename)
 
@@ -137,58 +137,68 @@ def playlist_downloader_execute(playlist_url):
     print(format.green, format.bold, "Complete!", format.reset)
     format.divider()
 
+########################################################################################################################################
 
-def video_downloader_execute(video_url):
-    # download each item in the list
-    # link = video_url.video_urls
 
-    # yt = YouTube(url)  # Convert link to YouTube object
+def video_downloader_execute(video_url):  # download a video from a url
+    video_title_filtered = video_url.title()
+    video_title_filtered.replace(';', '-')
+    video_title_filtered.replace(':', '-')
+
+    # Convert link to YouTube object (makimg the yt variable)
     yt = YouTube(video_url)
 
-    # takes the best resolution stream for best possible audio result
+    # gets the best resolution stream for best possible audio result
     stream = yt.streams.get_highest_resolution()
 
-    # gets the filename
+    # gets the filename of the first audio stream, tells the user it's downloading
+    # assign the default file name to a variable
     default_filename = stream.default_filename
     print(format.green, format.bold, "Downloading  ",
-          format.reset, default_filename)
+          format.reset, (default_filename[:-4]))
 
     stream.download()
 
-    # creates mp3 filename for downloaded file
-    new_filename = default_filename[0:-3] + "mp3"
+    def ffmpeg_to_mp3():
+        for filename in os.listdir((os.curdir)):
+            if filename.endswith(".mp4"):
+                print(format.green, format.italic, 'Converting', format.reset)
+                # Split into base name and extension
+                base_name, _ = os.path.splitext(filename)
+                new_filename = base_name + ".mp3"  # Create new filename with .mp3 extension
+                prompt_a = f'ffmpeg -i "{filename}" "{new_filename}" -y'
+                prompt_b = " -loglevel warning"  # debug mode
 
-    for filename in os.listdir((os.curdir)):  # Convert
-        if (filename.endswith(".mp4")):  # or .avi, .mpeg, ect
-            print('     . . .')
-            prompt_a = ("ffmpeg -i \""+default_filename +
-                        "\" \""+new_filename+"\""+" -y")
-            prompt_b = (" -loglevel warning")  # debug mode
+                if Config.debug_mode:
+                    os.system(prompt_a)
+                else:
+                    os.system(prompt_a + prompt_b)
 
-            if config.debug_mode == True:
-                os.system(prompt_a)
-            elif config.debug_mode == False:
-                os.system(prompt_a + prompt_b)
+    ffmpeg_to_mp3()
 
-        if config.remove_source_file == True:
-            # Remove original mp4, just leaving the converted file
-            os.remove(default_filename)
+    if Config.remove_source_file == True:
+        # Remove original mp4, just leaving the converted file
+        os.remove(default_filename)
+
+    format.divider()  # Ran at the end of the program
+    print(format.green, format.bold, "Complete!", format.reset)
+    format.divider()
 
 
 if __name__ == "__main__":
     '''
-    name == main allows tou to execute code when the file runs as a script, but not when it’s imported as a module.
+    name == main allows you to execute code when the file runs as a script, but not when it’s imported as a module.
     Nested code only runs in the top-level code environment, aka as a script or cmd.
     '''
     os.system('cls' if os.name == 'nt' else 'clear')  # Clear command line
 
-    def make_header():  # Make the "heaher" containing credits and warning messages
-        if config.remove_source_file == False:
+    def make_header():  # Make the header containing the program's name, credits, and show warnings if certain settings are set to true
+        if Config.remove_source_file == False:  # If remove_source_file is false, tell the user that source video files will be removed when converted
             print(format.yellow, "[INFO]", format.italic,  "remove_source_file", format.reset, format.yellow,
                   " is set to ", format.bold, "false!", format.reset, format.yellow, "\nAs a result, you will be prompted to answer \"yes\" or \"no\" to anything ffmpeg may ask of you, primarily the annoying overwriting of duplicate files!\nSet it to \"True\"  at the top of the code to ignore this warning and automatically shadow-answer \"yes\" to any prompts!", format.reset)
             format.divider()
 
-        if config.debug_mode == True:
+        if Config.debug_mode == True:  # If debug on, tell the user they will see all the output coming from ffmpeg
             print(format.yellow, "[INFO] ", format.italic,  "debug_mode", format.reset, format.yellow,
                   " is set to ", format.bold, "true!", format.reset, format.yellow, "\nAs a result, you will see all the output coming from ffmpeg!\nSet it to \"False\"  at the top of the code to ignore this warning and hide ffmpeg's output!", format.reset)
             format.divider()
@@ -200,19 +210,19 @@ if __name__ == "__main__":
     def prompt_url():  # Ask the user for the URL and execute other functions & code based on the input
         global url
         url = input(
-            " Enter the URL of the YouTube playlist or video you wish to download: ")
+            "  Enter the URL of the YouTube playlist or video you wish to download: ")
         format.divider()
 
-        if (str("youtube.com/playlist")) in url:  # If url input is a playlist url,
-            # if using "contains," a error is thrown: AttributeError: 'str' object has no attribute 'contains', so use "in" instead
-            if config.debug_mode == True:
+        # If url input is a playlist url, execute playlist_downloader_execute with playlist's url parameter
+        if "youtube.com/playlist" in url:
+            if Config.debug_mode == True:
                 print(format.yellow, "[INFO] Playlist detected!")
 
             # With error checking, execute playlist_downloader_execute with playlist's url parameter
             yt = Playlist(url)
-            if config.debug_mode == True:
+            if Config.debug_mode == True:
                 playlist_downloader_execute(yt)
-            elif config.debug_mode == False:
+            elif Config.debug_mode == False:
                 try:
                     playlist_downloader_execute(yt)
                 except Exception as thrown_error:
@@ -225,21 +235,22 @@ if __name__ == "__main__":
                     format.red, "[ERROR] debug_mode is neither True nor False and is therefore invalid. Set it to one of the two!", format.reset)
                 exit(2)
 
-        elif (str("youtube.com/watch")) in url:  # If url input is a video url
-            if config.debug_mode == True:
+        # If url input is a video url, execute video_downloader_execute with video's url parameter
+        elif "youtube.com/watch" in url:
+            if Config.debug_mode == True:
                 print(format.yellow, "[INFO] Video detected!", format.reset)
 
             # With error checking, execute video_downloader_execute with video's url parameter
-            yt = YouTube(url)
-            if config.debug_mode == True:
-                video_downloader_execute(yt)
-            elif config.debug_mode == False:
+            if Config.debug_mode == True:
+                video_downloader_execute(url)
+            elif Config.debug_mode == False:
                 try:
-                    video_downloader_execute(yt)
+                    video_downloader_execute(url)
                 except Exception as thrown_error:
                     error_text.invalid_url()
                     print(thrown_error)
-                    if 'streamingData' in thrown_error:  # If StreamingData is the error
+                    # If StreamingData is the error
+                    if 'streamingData' in str(thrown_error):
                         print(
                             format.red, "Check your internet connection or try again.", format.reset)
                     format.divider()

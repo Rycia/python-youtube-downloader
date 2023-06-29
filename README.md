@@ -2,6 +2,8 @@
 
 A python program built for use in Windows and Visual Studio Code to download and convert entire Youtube videos and playlists from video to audio format.
 
+This script will have you input a URL (playlist or video), download it as a .mp4 at highest quality, and convert it to a mp3, removing the original .mp4 if remove_source_file (see configuration below) is set to True.
+
 ---
 
 The script works essentially as is, excluding this little bit of setup that will not intrude on the preferences you have set for Visual Studio Code (assuming that's what you're using.)
@@ -16,9 +18,9 @@ The script works essentially as is, excluding this little bit of setup that will
 
 Configuration options exist at the top of the python file.
 
-    debug_mode = False             Shows FFMPEG output and other information for debugging. Default false.
+    debug_mode = False             If you want to see FFMPEG output and other info for debugging.
 
-    remove_source_file = True      If you want to remove the video (.mp4) file after converting to audio (.mp3). Default true.
+    remove_source_file = True      If you want to remove the video (.mp4) file after converting to audio (.mp3).
 
 ---
 

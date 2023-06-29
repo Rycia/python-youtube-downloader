@@ -15,9 +15,10 @@ The script works essentially as is, excluding this little bit of setup that will
 ---
 
 Configuration options exist at the top of the python file.
-remove_source_file = True If you want to remove the video (.mp4) file after converting to audio (.mp3). Default true.
 
     debug_mode = False             Shows FFMPEG output and other information for debugging. Default false.
+
+    remove_source_file = True      If you want to remove the video (.mp4) file after converting to audio (.mp3). Default true.
 
 ---
 

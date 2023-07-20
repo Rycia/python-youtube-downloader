@@ -96,7 +96,7 @@ def playlist_downloader_execute(playlist_url):
     links = playlist_url.video_urls
     # download each item in the list
     for i, l in enumerate(links):
-        print(format.reset, str(i+1)+" of "+(str(len(links))) +
+        print(format.reset, "", str(i+1)+" of "+(str(len(links))) +
               format.light_gray, format.italic, " ("+str(round(((i/len(links))*100), 2))+"%)", format.reset)
         yt = YouTube(l)  # Convert link to YouTube object
 
